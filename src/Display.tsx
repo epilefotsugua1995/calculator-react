@@ -23,7 +23,7 @@ const StyledDiv = styled.div`
 
 const Display = (props: DisplayProps) => {
     return (
-        
+
     <StyledDiv>{props.currentDisplay}</StyledDiv>
     );
 }

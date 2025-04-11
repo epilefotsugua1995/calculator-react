@@ -10,8 +10,11 @@ const Calculator = () => {
     const [previousValue, setPreviousValue] = useState<number | null>(null);
     const [operation, setOperation] = useState<Operator | null>(null);
     const [overwrite, setOverwrite] = useState<boolean>(true);
+    const [equalStore, setEqualStore] = useState<string>('');
 
     const handleDigitOrDecimal = (value: string) => {
+        setEqualStore('');
+
         if (currentInput === 'Error') {
             setCurrentInput(value === '.' ? '0.' : value);
             setOverwrite(false);
@@ -37,13 +40,15 @@ const Calculator = () => {
     };
 
     const handleOperation = (op: Operator) => {
+        setEqualStore('');
+
         if (currentInput === 'Error') return;
 
         const currentValueFloat = parseFloat(currentInput);
 
         if (previousValue !== null && operation && !overwrite) {
             try {
-                const result = calculate();
+                const result = calculate(currentInput);
                 setPreviousValue(result);
                 setCurrentInput(result.toString());
             } catch (e) {
@@ -62,14 +67,13 @@ const Calculator = () => {
         setOverwrite(true);
     };
 
-    const calculate = (): number => {
-        if (previousValue === null || operation === null) {
-             const currentVal = parseFloat(currentInput);
-             if (!isNaN(currentVal)) return currentVal;
-             throw new Error("Calculation error: Incomplete state.");
-        }
+    const calculate = (value: string): number => {
+        const currentValueFloat = parseFloat(value);
 
-        const currentValueFloat = parseFloat(currentInput);
+        if (previousValue === null || operation === null) {
+            if (!isNaN(currentValueFloat)) return currentValueFloat;
+            throw new Error("Calculation error: Incomplete state.");
+        }
 
         let result: number;
         switch (operation) {
@@ -99,21 +103,16 @@ const Calculator = () => {
 
 
 
-    const handleEquals = () => {
-        if (previousValue !== null && operation && !overwrite) {
-            try {
-                const result = calculate();
-                setCurrentInput(result.toString());
-                setPreviousValue(null);
-                setOperation(null);
-                setOverwrite(true);
-            } catch (e: any) {
-                setCurrentInput('Error');
-                setPreviousValue(null);
-                setOperation(null);
-                setOverwrite(true);
-            }
-        } else if (!operation && currentInput !== '' && previousValue !== null) {
+    const handleEquals = () => { 
+        if (previousValue !== null && operation && !overwrite && equalStore == '') {
+            const result = calculate(currentInput);
+            setEqualStore(currentInput);
+            setPreviousValue(result);
+            setCurrentInput(result.toString());
+        } else if (operation && equalStore !== '') {
+            const result = calculate(equalStore || '');
+            setPreviousValue(result);
+            setCurrentInput(result.toString());
         }
     };
 
@@ -122,11 +121,13 @@ const Calculator = () => {
         setPreviousValue(null);
         setOperation(null);
         setOverwrite(true);
+        setEqualStore('');
     };
 
     const handleClearEntry = () => {
         setCurrentInput('');
         setOverwrite(true);
+        setEqualStore('');
     };
 
     return (
